@@ -1,2 +1,2 @@
 # Campgrounds
-A massive project for locating different campgrounds in the US
+A massive project for creating new campgrounds in the US
