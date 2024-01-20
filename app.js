@@ -35,10 +35,14 @@ app.get("/campgrounds/new", (req, res) => {
     res.render("campgrounds/new");
 });
 
-app.post("/campgrounds", async (req, res) => {
-    const campground = new Campground(req.body.campground);
-    await campground.save(); //saves the new campground to the database
-    res.redirect(`/campgrounds/${campground._id}`);  // redirects you to the newly created campground by using a string template literal
+app.post("/campgrounds", async (req, res, next) => {
+    try {
+        const campground = new Campground(req.body.campground);
+        await campground.save(); //saves the new campground to the database
+        res.redirect(`/campgrounds/${campground._id}`);  // redirects you to the newly created campground by using a string template literal
+    } catch (e) {
+        next(e)
+    }
 });
 
 app.get("/campgrounds/:id", async (req, res) => {
@@ -53,7 +57,7 @@ app.get("/campgrounds/:id/edit", async (req, res) => {
 
 app.put("/campgrounds/:id", async (req, res) => {
     const { id } = req.params;
-    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground }); 
+    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     // here I use the spread-operator (...) to create a shallow copy of req.body.campground)
     // the copy has the same properties as the original but any changes I do to the copied object will have no impact on the original one.
     res.redirect(`/campgrounds/${campground._id}`);
@@ -61,9 +65,13 @@ app.put("/campgrounds/:id", async (req, res) => {
 
 app.delete("/campgrounds/:id", async (req, res) => {
     const { id } = req.params;
-    await Campground.findByIdAndDelete(id); 
+    await Campground.findByIdAndDelete(id);
     res.redirect(`/campgrounds`);
 });
+
+app.use((err, req, res, next) => {
+    res.send("Oh boy, Something went wrong")
+})
 
 app.listen(3000, () => {
     console.log.apply("Serving on port 3000!");
