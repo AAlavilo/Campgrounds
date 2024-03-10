@@ -1,4 +1,6 @@
 const Campground = require("../models/campground");
+const { cloudinary } = require('../cloudinary');
+
 
 
 module.exports.index = async (req, res) => {
@@ -13,8 +15,10 @@ module.exports.renderNewForm = (req, res) => {
 module.exports.createCampground = async (req, res, next) => {
     //if(!req.body.campground) throw new ExpressError("Invalid Campground Data", 400);
     const campground = new Campground(req.body.campground);
+    campground.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
     campground.author = req.user._id;
     await campground.save(); //saves the new campground to the database
+    //console.log(campground);
     req.flash("success", "Successfully made a new campground!");  //Here we use the key of "success" and after that display our message!
     res.redirect(`/campgrounds/${campground._id}`);  // redirects you to the newly created campground by using a string template literal
 }
@@ -49,6 +53,15 @@ module.exports.updateCampground = async (req, res) => {
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     // here I use the spread-operator (...) to create a shallow copy of req.body.campground)
     // the copy has the same properties as the original but any changes I do to the copied object will have no impact on the original one.
+    const imgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
+    campground.images.push(...imgs);
+    await campground.save();
+    if(req.body.deleteImages) {
+        for(let filename of req.body.deleteImages){
+            await cloudinary.uploader.destroy(filename);
+        }
+        await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages }}}})
+    }
     req.flash("success", "Successfully updated campground!")
     res.redirect(`/campgrounds/${campground._id}`);
 }
