@@ -14,6 +14,8 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
 
+const mongoSanitize = require('express-mongo-sanitize');
+
 const userRoutes = require("./routes/users")
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
@@ -35,6 +37,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method")); //pass in the query string you want to use, in this case "_method"
 app.use(express.static(path.join(__dirname, "public")));
+app.use(mongoSanitize);
 
 const sessionConfig = {
     secret: "thisshouldbeapropersecret",
@@ -63,13 +66,13 @@ app.use((req, res, next) => {
     res.locals.error = req.flash("error");
     next();
 });
-
+/*
 app.get("/fakeUser", async (req, res) => {
     const user = new User({email: "ggggg@gmail.com", username: "bigG"});
     const newUser = await User.register(user, "chicken");
     res.send(newUser);
 })
-
+*/
 app.use("/", userRoutes);
 app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/reviews", reviewRoutes);
